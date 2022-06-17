@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
@@ -49,7 +51,8 @@ namespace Bricks
         }
 
         public void Draw()
-        { 
+        {
+
             if (Visible == false)
             {
                 return;
@@ -71,6 +74,7 @@ namespace Bricks
             {
                 return;  //ball already exists, ignore
             }
+            PlaySound(gameContent.startSound);
             Visible = true;
             X = x;
             Y = y;
@@ -92,21 +96,25 @@ namespace Bricks
             {
                 X = 1;
                 XVelocity = XVelocity * -1;
+                PlaySound(gameContent.wallBounceSound);
             }
             if (X > ScreenWidth - Width + 5)
             {
                 X = ScreenWidth - Width + 5;
                 XVelocity = XVelocity * -1;
+                PlaySound(gameContent.wallBounceSound);
             }
             if (Y < 1)
             {
                 Y = 1;
                 YVelocity = YVelocity * -1;
+                PlaySound(gameContent.wallBounceSound);
             }
             if (Y > ScreenHeight)
             {
                 Visible = false;
                 Y = 0;
+                PlaySound(gameContent.wallBounceSound);
                 return false;
             }
             //check for paddle hit
@@ -116,6 +124,7 @@ namespace Bricks
             Rectangle ballRect = new Rectangle((int)X, (int)Y, (int)Width, (int)Height);
             if (HitTest(paddleRect, ballRect))
             {
+                PlaySound(gameContent.paddleBounceSound);
                 int offset = Convert.ToInt32((paddle.Width - (paddle.X + paddle.Width - X + Width / 2)));
                 offset = offset / 5;
                 if (offset < 0)
@@ -178,6 +187,7 @@ namespace Bricks
                             Rectangle brickRect = new Rectangle((int)brick.X, (int)brick.Y, (int)brick.Width, (int)brick.Height);
                             if (HitTest(ballRect, brickRect))
                             {
+                                PlaySound(gameContent.brickSound);
                                 brick.Visible = false;
                                 Score = Score + 7 - i;
                                 YVelocity = YVelocity * -1;
@@ -202,5 +212,18 @@ namespace Bricks
                 return false;
             }
         }
+
+        public static void PlaySound(SoundEffect sound)
+        {
+            float volume = 1;
+            float pitch = 0.0f;
+            float pan = 0.0f;
+            sound.Play(volume, pitch, pan);        
+        }
+
+
+
+
+
     }
 }

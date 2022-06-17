@@ -7,13 +7,14 @@ namespace Bricks
     public class Game1 : Game
     {
         private GraphicsDeviceManager _graphics;
-        private SpriteBatch _spriteBatch;
+        private SpriteBatch spriteBatch;
         private GameContent gameContent;
 
         private Paddle paddle;
         private Wall wall;
         private GameBorder gameBorder;
         private Ball ball;
+        private Ball staticBall;
 
         private int screenWidth = 0;
         private int screenHeight = 0;
@@ -41,7 +42,7 @@ namespace Bricks
 
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
+            spriteBatch = new SpriteBatch(GraphicsDevice);
             // TODO: use this.Content to load your game content here
             gameContent = new GameContent(Content);
             screenWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
@@ -63,11 +64,15 @@ namespace Bricks
             int paddleX = (screenWidth - gameContent.imgPaddle.Width / 2);
             // center paddle on the screen
             int paddleY = screenHeight - 100; // Paddle will be 100 pixles
-            paddle = new Paddle(paddleX, paddleY, screenWidth, _spriteBatch, gameContent);
-            wall = new Wall(1, 50, _spriteBatch, gameContent);
-            gameBorder = new GameBorder(screenWidth, screenHeight, _spriteBatch, gameContent);
-            ball = new Ball(screenWidth, screenHeight, _spriteBatch, gameContent);
-
+            paddle = new Paddle(paddleX, paddleY, screenWidth, spriteBatch, gameContent);
+            wall = new Wall(1, 50, spriteBatch, gameContent);
+            gameBorder = new GameBorder(screenWidth, screenHeight, spriteBatch, gameContent);
+            ball = new Ball(screenWidth, screenHeight, spriteBatch, gameContent);
+            staticBall = new Ball(screenWidth, screenHeight, spriteBatch, gameContent);
+            staticBall.X = 25;
+            staticBall.Y = 25;
+            staticBall.Visible = true;
+            staticBall.UseRotation = false;
         }
 
         protected override void Update(GameTime gameTime)
@@ -126,11 +131,10 @@ namespace Bricks
             GraphicsDevice.Clear(Color.Black);
 
             // TODO: Add your drawing code here
-            _spriteBatch.Begin();
+            spriteBatch.Begin();
             paddle.Draw();
             wall.Draw();
             gameBorder.Draw();
-            _spriteBatch.End();
             if (ball.Visible)
             {
                 bool inPlay = ball.Move(wall, paddle);
@@ -144,8 +148,36 @@ namespace Bricks
                     readyToServeBall = true;
                 }
             }
+            staticBall.Draw();
 
+            string scoreMsg = "Score: " + ball.Score.ToString("00000");
+            Vector2 space = gameContent.lableFont.MeasureString(scoreMsg);
+            spriteBatch.DrawString(gameContent.lableFont, scoreMsg, new Vector2((screenWidth - space.X) / 2, screenHeight - 40), Color.White);
+            if (ball.bricksCleared >= 70)
+            {
+                ball.Visible = false;
+                ball.bricksCleared = 0;
+                wall = new Wall(1, 50, spriteBatch, gameContent);
+                readyToServeBall = true;
+            }
+            if (readyToServeBall)
+            {
+                if (ballsRemaining > 0)
+                {
+                    string startMsg = "Press <Space> or Click Mouse to Start";
+                    Vector2 startSpace = gameContent.lableFont.MeasureString(startMsg);
+                    spriteBatch.DrawString(gameContent.lableFont, startMsg, new Vector2((screenWidth - startSpace.X) / 2, screenHeight / 2), Color.White);
+                }
+                else
+                {
+                    string endMsg = "Game Over";
+                    Vector2 endSpace = gameContent.lableFont.MeasureString(endMsg);
+                    spriteBatch.DrawString(gameContent.lableFont, endMsg, new Vector2((screenWidth - endSpace.X) / 2, screenHeight / 2), Color.White);
+                }
+            }
+            spriteBatch.DrawString(gameContent.lableFont, ballsRemaining.ToString(), new Vector2(40, 10), Color.White);
 
+            spriteBatch.End();
             base.Draw(gameTime);
         }
 
@@ -155,7 +187,7 @@ namespace Bricks
             {
                 ballsRemaining = 3;
                 ball.Score = 0;
-                wall = new Wall(1, 50, _spriteBatch, gameContent);
+                wall = new Wall(1, 50, spriteBatch, gameContent);
             }
             readyToServeBall = false;
             float ballX = paddle.X + (paddle.Width) / 2;
